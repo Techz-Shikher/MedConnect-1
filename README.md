@@ -34,34 +34,54 @@ Password: admin123
 ```
 MedConnect/
 │
-├── src/medconnect/
-│     ├── Dashboard.java
-│     ├── LoginPage.java
-│     ├── InvoicePage.java
-│     ├── PatientPage.java
-│     ├── DoctorPage.java
-│     ├── MedicinePage.java
-│     ├── RoomPage.java
-│     ├── AmbulancePage.java
-│     └── ...
+├── src/
+│   ├── medconnect/
+│   │   ├── Dashboard.java
+│   │   ├── LoginPage.java
+│   │   ├── Main.java
+│   │   │
+│   │   ├── PatientPage.java
+│   │   ├── DoctorPage.java
+│   │   ├── MedicinePage.java
+│   │   ├── RoomPage.java
+│   │   ├── AmbulancePage.java
+│   │   ├── AppointmentPage.java
+│   │   ├── InvoicePage.java
+│   │   │
+│   │   ├── util/
+│   │   │   ├── DBConnection.java
+│   │   │   └── ValidationUtil.java
+│   │   │
+│   │   ├── model/
+│   │   │   ├── Person.java
+│   │   │   ├── Patient.java
+│   │   │   ├── Doctor.java
+│   │   │   ├── Medicine.java
+│   │   │   ├── Room.java
+│   │   │   ├── AmbulanceRequest.java
+│   │   │   ├── Appointment.java
+│   │   │   ├── Invoice.java
+│   │   │
+│   │   ├── dao/
+│   │       ├── PatientDAO.java
+│   │       ├── DoctorDAO.java
+│   │       ├── MedicineDAO.java
+│   │       ├── RoomDAO.java
+│   │       ├── AmbulanceDAO.java
+│   │       ├── AppointmentDAO.java
+│   │       ├── InvoiceDAO.java
+│   │       └── UserDAO.java
 │
-├── src/medconnect/model/
-│     ├── Patient.java
-│     ├── Doctor.java
-│     ├── Invoice.java
-│     ├── Room.java
-│     └── ...
+├── lib/
+│   ├── mysql-connector-j-8.0.xx.jar
 │
-├── src/medconnect/dao/
-│     ├── DBConnection.java
-│     ├── PatientDAO.java
-│     ├── DoctorDAO.java
-│     ├── InvoiceDAO.java
-│     ├── RoomDAO.java
-│     └── ...
+├── database/
+│   ├── medconnect.sql
 │
-└── README.md
-```
+├── README.md
+├── .gitignore
+
+
 
 ---
 

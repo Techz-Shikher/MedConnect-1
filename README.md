@@ -117,11 +117,7 @@ LoginPage.java
 
 ---
 
-## 📸 Screenshots
 
-(Add your screenshots here)
-
----
 
 ## 👨‍💻 Developer
 

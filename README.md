@@ -4,28 +4,36 @@ A Java-based desktop application built using **Swing**, **MySQL**, and **JDBC**.
 
 ---
 
-## 🔐 Admin Login Credentials
+## 🔐 Login Credentials (Role-Based)
 
-```
-Username: admin
-Password: admin123
-```
+| Role          | Username        | Password     |
+|---------------|----------------|------------|
+| Admin         | admin          | admin123   |
+| Doctor        | drsmith        | doc123     |
+| Patient       | patient1       | patient123 |
+
+> Each role has **specific access**:
+> - **Admin:** Full access to all modules  
+> - **Doctor:** View/edit appointments, patients, and EHR  
+> - **Patient:** View personal appointments, prescriptions, and bills  
 
 ---
 
 ## 🚀 Features
+**Desktop Swing Application:**
+- Patient Management (CRUD)  
+- Doctor Management  
+- Electronic Health Records (EHR)  
+- Medicine & Pharmacy  
+- Room Booking System  
+- Ambulance Booking  
+- Appointment Scheduling  
+- Billing & Invoice Generation (Auto GST 18%)  
 
-* Patient Management
-* Doctor Management
-* Medicine & Pharmacy
-* Room Booking System
-* Ambulance Booking
-* Appointment Scheduling
-* Billing & Invoice Generation
-* GST Auto Calculation
-* MySQL Database Integration
-* Clean MVC Structure (Model, DAO, UI Pages)
-* CRUD Operations for All Modules
+**Web Servlet Modules (3 Pages):**
+1. **LoginServlet** – Handles user authentication and role-based access  
+2. **PatientServlet** – Manage patient records and EHR online  
+3. **AppointmentServlet** – Schedule, update, and view appointments via web  
 
 ---
 
@@ -47,6 +55,7 @@ MedConnect/
 │   │   ├── AmbulancePage.java
 │   │   ├── AppointmentPage.java
 │   │   ├── InvoicePage.java
+│   │   ├── EHRPage.java
 │   │   │
 │   │   ├── util/
 │   │   │   ├── DBConnection.java
@@ -61,17 +70,22 @@ MedConnect/
 │   │   │   ├── AmbulanceRequest.java
 │   │   │   ├── Appointment.java
 │   │   │   ├── Invoice.java
+│   │   │   ├── EHR.java
 │   │   │
 │   │   ├── dao/
-│   │       ├── PatientDAO.java
-│   │       ├── DoctorDAO.java
-│   │       ├── MedicineDAO.java
-│   │       ├── RoomDAO.java
-│   │       ├── AmbulanceDAO.java
-│   │       ├── AppointmentDAO.java
-│   │       ├── InvoiceDAO.java
-│   │       └── UserDAO.java
-│
+│   │   |    ├── PatientDAO.java
+│   │   |    ├── DoctorDAO.java
+│   │   |    ├── MedicineDAO.java
+│   │   |    ├── RoomDAO.java
+│   │   |    ├── AmbulanceDAO.java
+│   │   |    ├── AppointmentDAO.java
+│   │   |    ├── InvoiceDAO.java
+│   │   |    └── UserDAO.java
+│   │   |    ├── EHRDAO.java
+│   │   ├── servlet/
+│   │   │    ├── LoginServlet.java
+│   │   │    ├── PatientServlet.java
+│   │   │    └── AppointmentServlet.java
 ├── lib/
 │   ├── mysql-connector-j-8.0.xx.jar
 │

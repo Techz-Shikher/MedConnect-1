@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MedConnect</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding-top: 56px; background:#f8f9fa; }
+    .sidebar { height: calc(100vh - 56px); overflow-y:auto; }
+    .nav-link.active { background: rgba(0,123,255,0.1); border-radius:6px; }
+    .card-sm { min-height: 120px; }
+    .small-muted { font-size: .85rem; color: #6c757d; }
+    .table-actions button { margin-right:6px; }
+    .pointer { cursor:pointer; }
+    .brand { font-weight:700; color:#0d6efd }
+  </style>
+</head>
+<body>
+  <!-- Top navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand brand" href="#">MedConnect</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="topNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <span id="nav-user" class="nav-link">Not logged</span>
+          </li>
+          <li class="nav-item">
+            <button id="btn-logout" class="btn btn-outline-light btn-sm d-none">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main layout -->
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <aside id="sidebar" class="col-md-2 d-none d-md-block bg-white sidebar border-end p-3">
+        <nav class="nav flex-column" id="main-nav">
+          <a class="nav-link active" data-page="dashboard">Dashboard</a>
+          <a class="nav-link" data-page="patients">Patients</a>
+          <a class="nav-link" data-page="doctors">Doctors</a>
+          <a class="nav-link" data-page="appointments">Appointments</a>
+          <a class="nav-link" data-page="invoices">Invoices</a>
+          <a class="nav-link" data-page="rooms">Room Booking</a>
+          <a class="nav-link" data-page="ambulance">Ambulance</a>
+          <a class="nav-link" data-page="medicines">Medicines</a>
+          <hr>
+          <a class="nav-link text-danger" id="clear-data">Clear All Data</a>
+        </nav>
+      </aside>
+
+      <!-- Content area -->
+      <main class="col-md-10 ms-sm-auto col-lg-10 px-4" id="content-area">
+        <!-- Login area (shown if not authenticated) -->
+        <section id="login-section" class="py-5">
+          <div class="row justify-content-center">
+            <div class="col-md-5">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h4 class="card-title mb-3">MedConnect - Login</h4>
+                  <p class="small-muted">Use <strong>admin</strong> / <strong>admin123</strong> to login.</p>
+                  <form id="login-form">
+                    <div class="mb-3">
+                      <label class="form-label">Username</label>
+                      <input id="login-username" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Password</label>
+                      <input id="login-password" type="password" class="form-control" required />
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <button class="btn btn-primary" type="submit">Login</button>
+                      <button id="demo-load" class="btn btn-outline-secondary btn-sm" type="button">Load Demo Data</button>
+                    </div>
+                  </form>
+                  <hr>
+                  <small class="text-muted">This is a front-end demo using localStorage. Hook to a backend API for production.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Main app (hidden until login) -->
+        <section id="app-section" class="d-none py-4">
+          <div id="page-dashboard" class="page">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Dashboard</h3>
+              <div>
+                <button id="export-json" class="btn btn-sm btn-outline-primary">Export Data (JSON)</button>
+                <button id="import-json-btn" class="btn btn-sm btn-outline-secondary">Import</button>
+                <input id="import-json" type="file" accept=".json" style="display:none">
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <div class="card card-sm p-3 shadow-sm">
+                  <h6>Patients</h6>
+                  <h3 id="stat-patients">0</h3>
+                  <small class="small-muted">Total registered</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card card-sm p-3 shadow-sm">
+                  <h6>Doctors</h6>
+                  <h3 id="stat-doctors">0</h3>
+                  <small class="small-muted">Available</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card card-sm p-3 shadow-sm">
+                  <h6>Appointments</h6>
+                  <h3 id="stat-appointments">0</h3>
+                  <small class="small-muted">Upcoming</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card card-sm p-3 shadow-sm">
+                  <h6>Invoices</h6>
+                  <h3 id="stat-invoices">0</h3>
+                  <small class="small-muted">Unpaid/paid</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5>Quick Actions</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-primary btn-sm" data-nav="patients">Add Patient</button>
+                  <button class="btn btn-secondary btn-sm" data-nav="doctors">Add Doctor</button>
+                  <button class="btn btn-success btn-sm" data-nav="appointments">New Appointment</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Generic list page template -->
+          <div id="page-template" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 id="page-title">Title</h3>
+              <div>
+                <input id="page-search" placeholder="Search..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="btn-add" class="btn btn-sm btn-primary ms-2">Add</button>
+              </div>
+            </div>
+            <div id="page-content"></div>
+          </div>
+
+          <!-- Patients page -->
+          <div id="page-patients" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Patients</h3>
+              <div>
+                <input id="patients-search" placeholder="Search patients..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="patients-add" class="btn btn-sm btn-primary ms-2">Add Patient</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped table-sm" id="patients-table">
+                    <thead>
+                      <tr><th>ID</th><th>Name</th><th>Phone</th><th>Age</th><th>Gender</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctors page -->
+          <div id="page-doctors" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Doctors</h3>
+              <div>
+                <input id="doctors-search" placeholder="Search doctors..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="doctors-add" class="btn btn-sm btn-primary ms-2">Add Doctor</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <table class="table table-striped table-sm" id="doctors-table">
+                  <thead><tr><th>ID</th><th>Name</th><th>Specialty</th><th>Phone</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appointments page -->
+          <div id="page-appointments" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Appointments</h3>
+              <div>
+                <input id="appointments-search" placeholder="Search appointments..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="appointments-add" class="btn btn-sm btn-primary ms-2">New Appointment</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <table class="table table-striped table-sm" id="appointments-table">
+                  <thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date/Time</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Invoices page -->
+          <div id="page-invoices" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Invoices</h3>
+              <div>
+                <input id="invoices-search" placeholder="Search invoices..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="invoices-add" class="btn btn-sm btn-primary ms-2">Create Invoice</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <table class="table table-striped table-sm" id="invoices-table">
+                  <thead><tr><th>ID</th><th>Patient</th><th>Amount</th><th>Date</th><th>Payment</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rooms page -->
+          <div id="page-rooms" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Room Booking</h3>
+              <div>
+                <input id="rooms-search" placeholder="Search rooms..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="rooms-add" class="btn btn-sm btn-primary ms-2">Book Room</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <table class="table table-striped table-sm" id="rooms-table">
+                  <thead><tr><th>ID</th><th>Patient</th><th>Room No</th><th>From</th><th>To</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ambulance page -->
+          <div id="page-ambulance" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Ambulance</h3>
+              <div>
+                <input id="ambulance-search" placeholder="Search ambulance..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="ambulance-add" class="btn btn-sm btn-primary ms-2">New Request</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <table class="table table-striped table-sm" id="ambulance-table">
+                  <thead><tr><th>ID</th><th>Patient</th><th>Pickup</th><th>Destination</th><th>Date</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medicines page -->
+          <div id="page-medicines" class="page" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3>Medicines</h3>
+              <div>
+                <input id="medicines-search" placeholder="Search medicines..." class="form-control form-control-sm d-inline-block" style="width:220px">
+                <button id="medicines-add" class="btn btn-sm btn-primary ms-2">Add Medicine</button>
+              </div>
+            </div>
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <table class="table table-striped table-sm" id="medicines-table">
+                  <thead><tr><th>ID</th><th>Name</th><th>Qty</th><th>Price</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modals for forms (single modal used dynamically) -->
+  <div class="modal fade" id="formModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="modal-form">
+          <div class="modal-header">
+            <h5 id="modal-title" class="modal-title">Form</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="modal-body">
+            <!-- dynamic content -->
+          </div>
+          <div class="modal-footer">
+            <button type="submit" id="modal-save" class="btn btn-primary">Save</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap + scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    /**********************************************
+     * Simple MedConnect front-end (localStorage)
+     * Admin credentials: admin / admin123
+     **********************************************/
+    const STATE_KEY = 'medconnect_data_v1';
+    const AUTH_KEY = 'medconnect_auth_v1';
+
+    // Default empty data structure
+    const defaultData = {
+      patients: [],
+      doctors: [],
+      appointments: [],
+      invoices: [],
+      rooms: [],
+      ambulance: [],
+      medicines: [],
+      lastIds: { patients: 0, doctors:0, appointments:0, invoices:0, rooms:0, ambulance:0, medicines:0 }
+    };
+
+    // Helpers
+    function loadData() {
+      const raw = localStorage.getItem(STATE_KEY);
+      if (!raw) return JSON.parse(JSON.stringify(defaultData));
+      try { return JSON.parse(raw); } catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
+    }
+    function saveData(d) { localStorage.setItem(STATE_KEY, JSON.stringify(d)); }
+    function getNewId(data, key){
+      data.lastIds[key] = (data.lastIds[key] || 0) + 1;
+      saveData(data);
+      return data.lastIds[key];
+    }
+
+    // Initial load
+    let data = loadData();
+    let currentUser = localStorage.getItem(AUTH_KEY) || null;
+
+    // UI references
+    const loginSection = document.getElementById('login-section');
+    const appSection = document.getElementById('app-section');
+    const navUser = document.getElementById('nav-user');
+    const btnLogout = document.getElementById('btn-logout');
+    const sidebar = document.getElementById('sidebar');
+
+    const pageIds = {
+      dashboard: 'page-dashboard',
+      patients: 'page-patients',
+      doctors: 'page-doctors',
+      appointments: 'page-appointments',
+      invoices: 'page-invoices',
+      rooms: 'page-rooms',
+      ambulance: 'page-ambulance',
+      medicines: 'page-medicines'
+    };
+
+    // Simple auth
+    function setAuth(user) {
+      currentUser = user;
+      if (user) {
+        localStorage.setItem(AUTH_KEY, user);
+        loginSection.classList.add('d-none');
+        appSection.classList.remove('d-none');
+        sidebar.classList.remove('d-none');
+        navUser.textContent = user;
+        btnLogout.classList.remove('d-none');
+        showPage('dashboard');
+        renderAll();
+      } else {
+        localStorage.removeItem(AUTH_KEY);
+        loginSection.classList.remove('d-none');
+        appSection.classList.add('d-none');
+        sidebar.classList.add('d-none');
+        navUser.textContent = 'Not logged';
+        btnLogout.classList.add('d-none');
+      }
+    }
+
+    // On load: if authed, show app
+    document.addEventListener('DOMContentLoaded', ()=> {
+      if (currentUser) setAuth(currentUser);
+      else setAuth(null);
+    });
+
+    // Login form
+    document.getElementById('login-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      const u = document.getElementById('login-username').value.trim();
+      const p = document.getElementById('login-password').value.trim();
+      if (u === 'admin' && p === 'admin123') {
+        setAuth('admin');
+      } else {
+        alert('Invalid credentials. Use admin / admin123 for demo.');
+      }
+    });
+
+    // Logout
+    btnLogout.addEventListener('click', ()=> { setAuth(null); });
+
+    // Demo sample data loader
+    document.getElementById('demo-load').addEventListener('click', ()=> {
+      if (!confirm('Load demo data? This will not erase existing data.')) return;
+      // create some demo entries
+      const d = loadData();
+      function addPatient(name, phone, age, gender){
+        const id = getNewId(d,'patients');
+        d.patients.push({ id, name, phone, age, gender });
+      }
+      function addDoctor(name, spec, phone){
+        const id = getNewId(d,'doctors');
+        d.doctors.push({ id, name, specialty: spec, phone });
+      }
+      addPatient('Ravi Kumar','9876543210',32,'Male');
+      addPatient('Anita Sharma','9123456780',28,'Female');
+      addDoctor('Dr. S. Rao','Cardiology','9988776655');
+      addDoctor('Dr. M. Verma','General Physician','9870012345');
+      // appointment
+      const aid = getNewId(d,'appointments');
+      d.appointments.push({ id:aid, patientId:1, doctorId:1, datetime: new Date().toISOString(), status:'Scheduled' });
+      // invoice
+      const iid = getNewId(d,'invoices');
+      d.invoices.push({ id:iid, patientId:1, appointmentId:aid, amount:2500, billDate: new Date().toISOString(), paymentStatus:'Unpaid' });
+      saveData(d);
+      data = d;
+      alert('Demo data loaded.');
+      setAuth('admin');
+      renderAll();
+    });
+
+    // Simple page switching
+    document.querySelectorAll('#main-nav .nav-link').forEach(a=>{
+      a.addEventListener('click', ()=>{
+        document.querySelectorAll('#main-nav .nav-link').forEach(x=>x.classList.remove('active'));
+        a.classList.add('active');
+        showPage(a.dataset.page);
+      });
+    });
+
+    function showPage(page) {
+      // hide all pages
+      document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+      // show requested
+      const id = pageIds[page] || pageIds.dashboard;
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'block';
+      // set active nav (already handled)
+      if (page === 'dashboard') renderStats();
+    }
+
+    // Clear data
+    document.getElementById('clear-data').addEventListener('click', ()=>{
+      if (!confirm('Delete all MedConnect data from localStorage? This cannot be undone.')) return;
+      localStorage.removeItem(STATE_KEY);
+      data = loadData();
+      renderAll();
+      alert('All data cleared.');
+    });
+
+    // Export JSON
+    document.getElementById('export-json').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'medconnect-data.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Import JSON
+    document.getElementById('import-json-btn').addEventListener('click', ()=> document.getElementById('import-json').click());
+    document.getElementById('import-json').addEventListener('change', function(e){
+      const f = e.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = function(){ try {
+        const imported = JSON.parse(reader.result);
+        if (!imported) throw 'invalid';
+        localStorage.setItem(STATE_KEY, JSON.stringify(imported));
+        data = loadData();
+        renderAll();
+        alert('Import successful.');
+      } catch(err){ alert('Failed to import JSON.'); } };
+      reader.readAsText(f);
+    });
+
+    // Rendering functions for each list
+    function renderStats(){
+      document.getElementById('stat-patients').textContent = data.patients.length;
+      document.getElementById('stat-doctors').textContent = data.doctors.length;
+      document.getElementById('stat-appointments').textContent = data.appointments.length;
+      document.getElementById('stat-invoices').textContent = data.invoices.length;
+    }
+
+    function renderAll() {
+      data = loadData();
+      renderStats();
+      renderPatients();
+      renderDoctors();
+      renderAppointments();
+      renderInvoices();
+      renderRooms();
+      renderAmbulance();
+      renderMedicines();
+    }
+
+    /* ---------- Patients ---------- */
+    function renderPatients(filter){
+      const tbody = document.querySelector('#patients-table tbody');
+      tbody.innerHTML = '';
+      (data.patients || []).filter(p=>{
+        if (!filter) return true;
+        return `${p.name} ${p.phone} ${p.gender} ${p.age}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(p=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.id}</td>
+          <td>${escapeHtml(p.name)}</td>
+          <td>${escapeHtml(p.phone)}</td>
+          <td>${escapeHtml(p.age)}</td>
+          <td>${escapeHtml(p.gender)}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-patient" data-id="${p.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-patient" data-id="${p.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      // attach events
+      document.querySelectorAll('.edit-patient').forEach(btn=> btn.addEventListener('click', e=> openPatientForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-patient').forEach(btn=> btn.addEventListener('click', e=> {
+        const id = +e.target.dataset.id;
+        if (!confirm('Delete patient #' + id + '?')) return;
+        data.patients = data.patients.filter(x=> x.id !== id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('patients-add').addEventListener('click', ()=> openPatientForm());
+    document.getElementById('patients-search').addEventListener('input', function(){ renderPatients(this.value); });
+
+    function openPatientForm(id){
+      const isEdit = !!id;
+      const modalTitle = document.getElementById('modal-title');
+      const modalBody = document.getElementById('modal-body');
+      modalTitle.textContent = isEdit ? 'Edit Patient' : 'Add Patient';
+      const p = data.patients.find(x=>x.id===id) || { name:'', phone:'', age:'', gender:'' };
+      modalBody.innerHTML = `
+        <input type="hidden" name="id" value="${p.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Name</label><input name="name" class="form-control" required value="${escapeHtmlAttr(p.name)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Phone</label><input name="phone" class="form-control" required value="${escapeHtmlAttr(p.phone)}"></div>
+          <div class="mb-3 col-md-4"><label class="form-label">Age</label><input name="age" type="number" min="0" class="form-control" value="${escapeHtmlAttr(p.age)}"></div>
+          <div class="mb-3 col-md-4"><label class="form-label">Gender</label>
+            <select name="gender" class="form-select">
+              <option ${p.gender==='Male'?'selected':''}>Male</option>
+              <option ${p.gender==='Female'?'selected':''}>Female</option>
+              <option ${p.gender==='Other'?'selected':''}>Other</option>
+            </select>
+          </div>
+          <div class="mb-3 col-md-4"><label class="form-label">Notes</label><input name="notes" class="form-control" value="${escapeHtmlAttr(p.notes||'')}"></div>
+        </div>
+      `;
+      showModal(async function(form){
+        const formData = new FormData(form);
+        const obj = { name: formData.get('name').trim(), phone: formData.get('phone').trim(), age: formData.get('age'), gender: formData.get('gender'), notes: formData.get('notes') };
+        if (isEdit) {
+          const idx = data.patients.findIndex(x=> x.id===id);
+          data.patients[idx] = { ...data.patients[idx], ...obj };
+        } else {
+          const nid = getNewId(data,'patients');
+          data.patients.push({ id:nid, ...obj });
+        }
+        saveData(data);
+        renderAll();
+      });
+    }
+
+    /* ---------- Doctors ---------- */
+    function renderDoctors(filter){
+      const tbody = document.querySelector('#doctors-table tbody');
+      tbody.innerHTML = '';
+      (data.doctors || []).filter(d=>{
+        if (!filter) return true;
+        return `${d.name} ${d.specialty} ${d.phone}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(d=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${d.id}</td>
+          <td>${escapeHtml(d.name)}</td>
+          <td>${escapeHtml(d.specialty)}</td>
+          <td>${escapeHtml(d.phone)}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-doctor" data-id="${d.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-doctor" data-id="${d.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.edit-doctor').forEach(btn=> btn.addEventListener('click', e=> openDoctorForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-doctor').forEach(btn=> btn.addEventListener('click', e=> {
+        const id = +e.target.dataset.id;
+        if (!confirm('Delete doctor #' + id + '?')) return;
+        data.doctors = data.doctors.filter(x=> x.id !== id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('doctors-add').addEventListener('click', ()=> openDoctorForm());
+    document.getElementById('doctors-search').addEventListener('input', function(){ renderDoctors(this.value); });
+
+    function openDoctorForm(id){
+      const isEdit = !!id;
+      const d = data.doctors.find(x=>x.id===id) || { name:'', specialty:'', phone:'' };
+      document.getElementById('modal-title').textContent = isEdit ? 'Edit Doctor' : 'Add Doctor';
+      document.getElementById('modal-body').innerHTML = `
+        <input type="hidden" name="id" value="${d.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Name</label><input name="name" class="form-control" required value="${escapeHtmlAttr(d.name)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Specialty</label><input name="specialty" class="form-control" value="${escapeHtmlAttr(d.specialty)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Phone</label><input name="phone" class="form-control" value="${escapeHtmlAttr(d.phone)}"></div>
+        </div>
+      `;
+      showModal(function(form){
+        const fd = new FormData(form);
+        const obj = { name: fd.get('name').trim(), specialty: fd.get('specialty').trim(), phone: fd.get('phone').trim() };
+        if (isEdit) {
+          const idx = data.doctors.findIndex(x=> x.id===id); data.doctors[idx] = { ...data.doctors[idx], ...obj };
+        } else { const nid = getNewId(data,'doctors'); data.doctors.push({ id:nid, ...obj }); }
+        saveData(data); renderAll();
+      });
+    }
+
+    /* ---------- Appointments ---------- */
+    function renderAppointments(filter){
+      const tbody = document.querySelector('#appointments-table tbody');
+      tbody.innerHTML = '';
+      (data.appointments || []).filter(a=>{
+        if (!filter) return true;
+        const pname = (data.patients.find(p=>p.id===a.patientId)||{}).name || '';
+        const dname = (data.doctors.find(d=>d.id===a.doctorId)||{}).name || '';
+        return `${a.id} ${pname} ${dname} ${a.status} ${a.datetime}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(a=>{
+        const patient = data.patients.find(p=>p.id===a.patientId) || { name:'-' };
+        const doctor = data.doctors.find(d=>d.id===a.doctorId) || { name:'-' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${a.id}</td>
+          <td>${escapeHtml(patient.name)}</td>
+          <td>${escapeHtml(doctor.name)}</td>
+          <td>${new Date(a.datetime).toLocaleString()}</td>
+          <td>${escapeHtml(a.status)}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-appointment" data-id="${a.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-appointment" data-id="${a.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.edit-appointment').forEach(btn=> btn.addEventListener('click', e=> openAppointmentForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-appointment').forEach(btn=> btn.addEventListener('click', e=> {
+        if (!confirm('Delete appointment?')) return;
+        data.appointments = data.appointments.filter(x=> x.id !== +e.target.dataset.id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('appointments-add').addEventListener('click', ()=> openAppointmentForm());
+    document.getElementById('appointments-search').addEventListener('input', function(){ renderAppointments(this.value); });
+
+    function openAppointmentForm(id){
+      const isEdit = !!id;
+      const a = data.appointments.find(x=>x.id===id) || { patientId:'', doctorId:'', datetime: new Date().toISOString().slice(0,16), status:'Scheduled' };
+      document.getElementById('modal-title').textContent = isEdit ? 'Edit Appointment' : 'New Appointment';
+      // patient options
+      const patientOptions = data.patients.map(p=> `<option value="${p.id}" ${p.id===a.patientId?'selected':''}>${p.name} (${p.id})</option>`).join('') || '<option value="">--add patient first--</option>';
+      const doctorOptions = data.doctors.map(d=> `<option value="${d.id}" ${d.id===a.doctorId?'selected':''}>${d.name} (${d.id})</option>`).join('') || '<option value="">--add doctor first--</option>';
+      document.getElementById('modal-body').innerHTML = `
+        <input type="hidden" name="id" value="${a.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Patient</label><select name="patientId" class="form-select">${patientOptions}</select></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Doctor</label><select name="doctorId" class="form-select">${doctorOptions}</select></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Date & Time</label><input name="datetime" type="datetime-local" class="form-control" value="${toLocalDatetimeValue(a.datetime)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option ${a.status==='Scheduled'?'selected':''}>Scheduled</option>
+              <option ${a.status==='Completed'?'selected':''}>Completed</option>
+              <option ${a.status==='Cancelled'?'selected':''}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+      `;
+      showModal(function(form){
+        const fd = new FormData(form);
+        const obj = { patientId: +fd.get('patientId') || null, doctorId: +fd.get('doctorId') || null, datetime: new Date(fd.get('datetime')).toISOString(), status: fd.get('status') };
+        if (isEdit) {
+          const idx = data.appointments.findIndex(x=> x.id===id); data.appointments[idx] = { ...data.appointments[idx], ...obj };
+        } else { const nid = getNewId(data,'appointments'); data.appointments.push({ id:nid, ...obj }); }
+        saveData(data); renderAll();
+      });
+    }
+
+    /* ---------- Invoices ---------- */
+    function renderInvoices(filter){
+      const tbody = document.querySelector('#invoices-table tbody');
+      tbody.innerHTML = '';
+      (data.invoices || []).filter(inv=>{
+        if (!filter) return true;
+        const pname = (data.patients.find(p=>p.id===inv.patientId)||{}).name || '';
+        return `${inv.id} ${pname} ${inv.paymentStatus} ${inv.amount}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(inv=>{
+        const patient = data.patients.find(p=>p.id===inv.patientId) || { name:'-' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${inv.id}</td>
+          <td>${escapeHtml(patient.name)}</td>
+          <td>${inv.amount}</td>
+          <td>${new Date(inv.billDate).toLocaleDateString()}</td>
+          <td>${escapeHtml(inv.paymentStatus)}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-invoice" data-id="${inv.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-invoice" data-id="${inv.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.edit-invoice').forEach(btn=> btn.addEventListener('click', e=> openInvoiceForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-invoice').forEach(btn=> btn.addEventListener('click', e=> {
+        if (!confirm('Delete invoice?')) return;
+        data.invoices = data.invoices.filter(x=> x.id !== +e.target.dataset.id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('invoices-add').addEventListener('click', ()=> openInvoiceForm());
+    document.getElementById('invoices-search').addEventListener('input', function(){ renderInvoices(this.value); });
+
+    function openInvoiceForm(id){
+      const isEdit = !!id;
+      const inv = data.invoices.find(x=>x.id===id) || { patientId:'', appointmentId:'', amount:'', billDate: new Date().toISOString(), paymentStatus:'Unpaid' };
+      const patientOptions = data.patients.map(p=> `<option value="${p.id}" ${p.id===inv.patientId?'selected':''}>${p.name} (${p.id})</option>`).join('') || '<option value="">--add patient first--</option>';
+      const appointmentOptions = data.appointments.map(a=> `<option value="${a.id}" ${a.id===inv.appointmentId?'selected':''}>#${a.id}</option>`).join('') || '<option value="">--none--</option>';
+      document.getElementById('modal-title').textContent = isEdit ? 'Edit Invoice' : 'Create Invoice';
+      document.getElementById('modal-body').innerHTML = `
+        <input type="hidden" name="id" value="${inv.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Patient</label><select name="patientId" class="form-select">${patientOptions}</select></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Appointment (optional)</label><select name="appointmentId" class="form-select"><option value="">--none--</option>${appointmentOptions}</select></div>
+          <div class="mb-3 col-md-4"><label class="form-label">Amount</label><input name="amount" type="number" step="0.01" class="form-control" value="${inv.amount||''}"></div>
+          <div class="mb-3 col-md-4"><label class="form-label">Bill Date</label><input name="billDate" type="date" class="form-control" value="${new Date(inv.billDate).toISOString().slice(0,10)}"></div>
+          <div class="mb-3 col-md-4"><label class="form-label">Payment Status</label>
+            <select name="paymentStatus" class="form-select">
+              <option ${inv.paymentStatus==='Unpaid'?'selected':''}>Unpaid</option>
+              <option ${inv.paymentStatus==='Paid'?'selected':''}>Paid</option>
+            </select>
+          </div>
+        </div>
+      `;
+      showModal(function(form){
+        const fd = new FormData(form);
+        const obj = { patientId: +fd.get('patientId')||null, appointmentId: +fd.get('appointmentId')||null, amount: +fd.get('amount')||0, billDate: new Date(fd.get('billDate')).toISOString(), paymentStatus: fd.get('paymentStatus') };
+        if (isEdit) {
+          const idx = data.invoices.findIndex(x=> x.id===id); data.invoices[idx] = { ...data.invoices[idx], ...obj };
+        } else { const nid = getNewId(data,'invoices'); data.invoices.push({ id:nid, ...obj }); }
+        saveData(data); renderAll();
+      });
+    }
+
+    /* ---------- Rooms ---------- */
+    function renderRooms(filter){
+      const tbody = document.querySelector('#rooms-table tbody');
+      tbody.innerHTML = '';
+      (data.rooms || []).filter(r=>{
+        if (!filter) return true;
+        const pname = (data.patients.find(p=>p.id===r.patientId)||{}).name || '';
+        return `${r.id} ${pname} ${r.roomNo}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(r=>{
+        const patient = data.patients.find(p=>p.id===r.patientId) || { name:'-' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.id}</td>
+          <td>${escapeHtml(patient.name)}</td>
+          <td>${escapeHtml(r.roomNo)}</td>
+          <td>${new Date(r.from).toLocaleDateString()}</td>
+          <td>${new Date(r.to).toLocaleDateString()}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-room" data-id="${r.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-room" data-id="${r.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.edit-room').forEach(btn=> btn.addEventListener('click', e=> openRoomForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-room').forEach(btn=> btn.addEventListener('click', e=> {
+        if (!confirm('Delete booking?')) return;
+        data.rooms = data.rooms.filter(x=> x.id !== +e.target.dataset.id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('rooms-add').addEventListener('click', ()=> openRoomForm());
+    document.getElementById('rooms-search').addEventListener('input', function(){ renderRooms(this.value); });
+
+    function openRoomForm(id){
+      const isEdit = !!id;
+      const r = data.rooms.find(x=>x.id===id) || { patientId:'', roomNo:'', from: new Date().toISOString().slice(0,10), to: new Date().toISOString().slice(0,10) };
+      const patientOptions = data.patients.map(p=> `<option value="${p.id}" ${p.id===r.patientId?'selected':''}>${p.name} (${p.id})</option>`).join('') || '<option value="">--add patient first--</option>';
+      document.getElementById('modal-title').textContent = isEdit ? 'Edit Room Booking' : 'Book Room';
+      document.getElementById('modal-body').innerHTML = `
+        <input type="hidden" name="id" value="${r.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Patient</label><select name="patientId" class="form-select">${patientOptions}</select></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Room No</label><input name="roomNo" class="form-control" value="${escapeHtmlAttr(r.roomNo||'')}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">From</label><input name="from" type="date" class="form-control" value="${r.from.slice(0,10)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">To</label><input name="to" type="date" class="form-control" value="${r.to.slice(0,10)}"></div>
+        </div>
+      `;
+      showModal(function(form){
+        const fd = new FormData(form);
+        const obj = { patientId: +fd.get('patientId')||null, roomNo: fd.get('roomNo').trim(), from: new Date(fd.get('from')).toISOString(), to: new Date(fd.get('to')).toISOString() };
+        if (isEdit) {
+          const idx = data.rooms.findIndex(x=> x.id===id); data.rooms[idx] = { ...data.rooms[idx], ...obj };
+        } else { const nid = getNewId(data,'rooms'); data.rooms.push({ id:nid, ...obj }); }
+        saveData(data); renderAll();
+      });
+    }
+
+    /* ---------- Ambulance ---------- */
+    function renderAmbulance(filter){
+      const tbody = document.querySelector('#ambulance-table tbody');
+      tbody.innerHTML = '';
+      (data.ambulance || []).filter(a=>{
+        if (!filter) return true;
+        const pname = (data.patients.find(p=>p.id===a.patientId)||{}).name || '';
+        return `${a.id} ${pname} ${a.pickup} ${a.destination}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(a=>{
+        const patient = data.patients.find(p=>p.id===a.patientId) || { name:'-' };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${a.id}</td>
+          <td>${escapeHtml(patient.name)}</td>
+          <td>${escapeHtml(a.pickup)}</td>
+          <td>${escapeHtml(a.destination)}</td>
+          <td>${new Date(a.date).toLocaleString()}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-ambulance" data-id="${a.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-ambulance" data-id="${a.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.edit-ambulance').forEach(btn=> btn.addEventListener('click', e=> openAmbulanceForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-ambulance').forEach(btn=> btn.addEventListener('click', e=> {
+        if (!confirm('Delete request?')) return;
+        data.ambulance = data.ambulance.filter(x=> x.id !== +e.target.dataset.id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('ambulance-add').addEventListener('click', ()=> openAmbulanceForm());
+    document.getElementById('ambulance-search').addEventListener('input', function(){ renderAmbulance(this.value); });
+
+    function openAmbulanceForm(id){
+      const isEdit = !!id;
+      const a = data.ambulance.find(x=>x.id===id) || { patientId:'', pickup:'', destination:'', date: new Date().toISOString().slice(0,16) };
+      const patientOptions = data.patients.map(p=> `<option value="${p.id}" ${p.id===a.patientId?'selected':''}>${p.name} (${p.id})</option>`).join('') || '<option value="">--add patient first--</option>';
+      document.getElementById('modal-title').textContent = isEdit ? 'Edit Ambulance' : 'New Ambulance Request';
+      document.getElementById('modal-body').innerHTML = `
+        <input type="hidden" name="id" value="${a.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Patient</label><select name="patientId" class="form-select">${patientOptions}</select></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Pickup</label><input name="pickup" class="form-control" value="${escapeHtmlAttr(a.pickup)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Destination</label><input name="destination" class="form-control" value="${escapeHtmlAttr(a.destination)}"></div>
+          <div class="mb-3 col-md-6"><label class="form-label">Date & Time</label><input name="date" type="datetime-local" class="form-control" value="${toLocalDatetimeValue(a.date)}"></div>
+        </div>
+      `;
+      showModal(function(form){
+        const fd = new FormData(form);
+        const obj = { patientId: +fd.get('patientId')||null, pickup: fd.get('pickup').trim(), destination: fd.get('destination').trim(), date: new Date(fd.get('date')).toISOString() };
+        if (isEdit) { const idx = data.ambulance.findIndex(x=> x.id===id); data.ambulance[idx] = { ...data.ambulance[idx], ...obj }; }
+        else { const nid = getNewId(data,'ambulance'); data.ambulance.push({ id:nid, ...obj }); }
+        saveData(data); renderAll();
+      });
+    }
+
+    /* ---------- Medicines ---------- */
+    function renderMedicines(filter){
+      const tbody = document.querySelector('#medicines-table tbody');
+      tbody.innerHTML = '';
+      (data.medicines || []).filter(m=>{
+        if (!filter) return true;
+        return `${m.id} ${m.name} ${m.qty} ${m.price}`.toLowerCase().includes(filter.toLowerCase());
+      }).forEach(m=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${m.id}</td>
+          <td>${escapeHtml(m.name)}</td>
+          <td>${m.qty}</td>
+          <td>${m.price}</td>
+          <td class="table-actions">
+            <button class="btn btn-sm btn-outline-primary edit-medicine" data-id="${m.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-danger del-medicine" data-id="${m.id}">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.querySelectorAll('.edit-medicine').forEach(btn=> btn.addEventListener('click', e=> openMedicineForm(+e.target.dataset.id)));
+      document.querySelectorAll('.del-medicine').forEach(btn=> btn.addEventListener('click', e=> {
+        if (!confirm('Delete medicine?')) return;
+        data.medicines = data.medicines.filter(x=> x.id !== +e.target.dataset.id);
+        saveData(data); renderAll();
+      }));
+    }
+    document.getElementById('medicines-add').addEventListener('click', ()=> openMedicineForm());
+    document.getElementById('medicines-search').addEventListener('input', function(){ renderMedicines(this.value); });
+
+    function openMedicineForm(id){
+      const isEdit = !!id;
+      const m = data.medicines.find(x=>x.id===id) || { name:'', qty:0, price:0 };
+      document.getElementById('modal-title').textContent = isEdit ? 'Edit Medicine' : 'Add Medicine';
+      document.getElementById('modal-body').innerHTML = `
+        <input type="hidden" name="id" value="${m.id||''}">
+        <div class="row">
+          <div class="mb-3 col-md-6"><label class="form-label">Name</label><input name="name" class="form-control" required value="${escapeHtmlAttr(m.name)}"></div>
+          <div class="mb-3 col-md-3"><label class="form-label">Qty</label><input name="qty" type="number" class="form-control" value="${m.qty}"></div>
+          <div class="mb-3 col-md-3"><label class="form-label">Price</label><input name="price" type="number" step="0.01" class="form-control" value="${m.price}"></div>
+        </div>
+      `;
+      showModal(function(form){
+        const fd = new FormData(form);
+        const obj = { name: fd.get('name').trim(), qty: +fd.get('qty')||0, price: +fd.get('price')||0 };
+        if (isEdit) { const idx = data.medicines.findIndex(x=> x.id===id); data.medicines[idx] = { ...data.medicines[idx], ...obj }; }
+        else { const nid = getNewId(data,'medicines'); data.medicines.push({ id:nid, ...obj }); }
+        saveData(data); renderAll();
+      });
+    }
+
+    /* ---------- Modal helper ---------- */
+    const bsModal = new bootstrap.Modal(document.getElementById('formModal'));
+    function showModal(onSubmit){
+      const form = document.getElementById('modal-form');
+      // remove previous listeners
+      const clone = form.cloneNode(true);
+      form.parentNode.replaceChild(clone, form);
+      clone.addEventListener('submit', function(e){
+        e.preventDefault();
+        onSubmit(clone);
+        bsModal.hide();
+      });
+      bsModal.show();
+    }
+
+    /* ---------- Utilities ---------- */
+    function escapeHtml(str){ if(!str && str !== 0) return ''; return String(str).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+    function escapeHtmlAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
+    function toLocalDatetimeValue(iso){
+      try {
+        if (!iso) return new Date().toISOString().slice(0,16);
+        const dt = new Date(iso);
+        const tzOffset = dt.getTimezoneOffset() * 60000;
+        const local = new Date(dt - tzOffset);
+        return local.toISOString().slice(0,16);
+      } catch(e){ return new Date().toISOString().slice(0,16); }
+    }
+
+    // small helper to turn any page nav buttons
+    document.querySelectorAll('[data-nav]').forEach(btn => btn.addEventListener('click', e=>{
+      const p = e.target.dataset.nav;
+      document.querySelectorAll('#main-nav .nav-link').forEach(x=>x.classList.remove('active'));
+      const a = Array.from(document.querySelectorAll('#main-nav .nav-link')).find(n=> n.dataset.page === p);
+      if (a) a.classList.add('active');
+      showPage(p);
+    }));
+
+    // utility to present dates correctly
+    // initial render call
+    renderAll();
+  </script>
+</body>
+</html>

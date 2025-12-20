@@ -6,8 +6,24 @@ import java.awt.event.*;
 
 public class Dashboard extends JFrame {
 
-    public Dashboard() {
+    private String username;
+    private String role;
 
+    // No-arg constructor (for testing)
+    public Dashboard() {
+        this.username = "Guest";
+        this.role = "guest";
+        initDashboardUI();
+    }
+
+    // Constructor for login
+    public Dashboard(String username, String role) {
+        this.username = username;
+        this.role = role;
+        initDashboardUI();
+    }
+
+    private void initDashboardUI() {
         // ⬆️ FULL SCREEN MODE
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setUndecorated(false);
@@ -27,31 +43,44 @@ public class Dashboard extends JFrame {
         title.setFont(new Font("Arial", Font.BOLD, 34));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         title.setBorder(BorderFactory.createEmptyBorder(50, 20, 50, 0));
-
         leftPanel.add(title);
 
-        // MENU ITEMS
-        leftPanel.add(createMenuItem("Invoice", "E:/project/MedConnect/src/icon/invoice.png", () -> new InvoicePage()));
-        leftPanel.add(createMenuItem("Prescription", "E:/project/MedConnect/src/icon/prescription.jpg", () -> new PrescriptionPage()));
-        leftPanel.add(createMenuItem("Medicine", "E:/project/MedConnect/src/icon/medicine.jpg", () -> new MedicinePage()));
-        leftPanel.add(createMenuItem("Doctor", "E:/project/MedConnect/src/icon/dr.jpg", () -> new DoctorPage()));
-        leftPanel.add(createMenuItem("Patient", "E:/project/MedConnect/src/icon/patient.jpg", () -> new PatientPage()));
+        // WELCOME USER LABEL
+        JLabel userLabel = new JLabel("Hello, " + username + " (" + role + ")");
+        userLabel.setForeground(Color.WHITE);
+        userLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        userLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        userLabel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 0));
+        leftPanel.add(userLabel);
 
-        leftPanel.add(createMenuItem("Ambulance", "E:/project/MedConnect/src/icon/amb.jpg", () -> new AmbulancePage()));
-        leftPanel.add(createMenuItem("Room", "E:/project/MedConnect/src/icon/roomm.jpg", () -> new RoomPage()));
+        // MENU ITEMS (role-based)
+        if (!role.equalsIgnoreCase("patient")) { // patient cannot access admin/management menus
+            leftPanel.add(createMenuItem("Invoice", "E:/project/MedConnect/src/icon/invoice.png", () -> new InvoicePage()));
+            leftPanel.add(createMenuItem("Prescription", "E:/project/MedConnect/src/icon/prescription.jpg", () -> new PrescriptionPage()));
+            leftPanel.add(createMenuItem("Medicine", "E:/project/MedConnect/src/icon/medicine.jpg", () -> new MedicinePage()));
+        }
+
+        if (role.equalsIgnoreCase("admin")) { // only admin
+            leftPanel.add(createMenuItem("Doctor", "E:/project/MedConnect/src/icon/dr.jpg", () -> new DoctorPage()));
+            leftPanel.add(createMenuItem("Patient", "E:/project/MedConnect/src/icon/patient.jpg", () -> new PatientPage()));
+            leftPanel.add(createMenuItem("Ambulance", "E:/project/MedConnect/src/icon/amb.jpg", () -> new AmbulancePage()));
+            leftPanel.add(createMenuItem("Room", "E:/project/MedConnect/src/icon/roomm.jpg", () -> new RoomPage()));
+        }
+
+        // EHR accessible for doctors and admin
+        if (role.equalsIgnoreCase("doctor") || role.equalsIgnoreCase("admin")) {
+            leftPanel.add(createMenuItem("EHR", "E:/project/MedConnect/src/icon/ehr.png", () -> new EHRPage()));
+        }
+
         leftPanel.add(createMenuItem("Appointment", "E:/project/MedConnect/src/icon/appointment.png", () -> new AppointmentPage()));
 
-        // ============================
-        // 🔥 LIVE CLOCK LABEL (Multithreading Feature)
-        // ============================
+        // LIVE CLOCK
         JLabel clockLabel = new JLabel("Time: --:--");
         clockLabel.setFont(new Font("Arial", Font.BOLD, 18));
         clockLabel.setForeground(Color.WHITE);
         clockLabel.setBorder(BorderFactory.createEmptyBorder(30, 20, 20, 0));
         leftPanel.add(Box.createVerticalGlue());
         leftPanel.add(clockLabel);
-
-        // Start clock thread
         startClockThread(clockLabel);
 
         add(leftPanel, BorderLayout.WEST);
@@ -60,7 +89,6 @@ public class Dashboard extends JFrame {
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(Color.WHITE);
 
-        // WELCOME TEXT
         JLabel welcome = new JLabel("Welcome to MedConnect Dashboard", SwingConstants.CENTER);
         welcome.setFont(new Font("Arial", Font.BOLD, 60));
         welcome.setForeground(new Color(33, 33, 33));
@@ -69,7 +97,6 @@ public class Dashboard extends JFrame {
         centerPanel.setBackground(Color.WHITE);
         centerPanel.add(welcome, BorderLayout.NORTH);
 
-        // IMAGE
         ImageIcon dashboardImg = new ImageIcon("E:/project/MedConnect/src/icon/login.jpg");
         Image scaledImg = dashboardImg.getImage().getScaledInstance(400, 400, Image.SCALE_SMOOTH);
         JLabel imgLabel = new JLabel(new ImageIcon(scaledImg));
@@ -104,7 +131,6 @@ public class Dashboard extends JFrame {
         panel.add(label);
 
         panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
         panel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 action.run();
@@ -114,7 +140,7 @@ public class Dashboard extends JFrame {
         return panel;
     }
 
-    // LIVE CLOCK THREAD (Multithreading Feature)
+    // LIVE CLOCK THREAD
     private void startClockThread(JLabel clockLabel) {
         Thread t = new Thread(() -> {
             while (true) {
@@ -123,10 +149,7 @@ public class Dashboard extends JFrame {
                     java.time.format.DateTimeFormatter dtf =
                             java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy | HH:mm");
 
-                    SwingUtilities.invokeLater(() -> {
-                        clockLabel.setText("Time: " + now.format(dtf));
-                    });
-
+                    SwingUtilities.invokeLater(() -> clockLabel.setText("Time: " + now.format(dtf)));
                     Thread.sleep(1000);
                 } catch (Exception e) {
                     e.printStackTrace();

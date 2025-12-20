@@ -109,9 +109,8 @@ public class Login extends JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Login Successful!\nWelcome " + name);
 
-                // Open dashboard
-                new Dashboard();   // ✔ correct
-
+                // Open dashboard with role-based access
+                new Dashboard(name, role);   // Pass logged-in user's info
                 this.dispose();
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid Username or Password!");

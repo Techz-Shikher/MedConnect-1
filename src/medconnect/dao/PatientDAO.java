@@ -79,7 +79,7 @@ public class PatientDAO {
     public List<Patient> getAllPatients() {
         List<Patient> list = new ArrayList<>();
         String sql = "SELECT u.id, u.name, p.age, p.gender, p.blood_group " +
-                "FROM users u INNER JOIN patients p ON u.id=p.patient_id";
+                "FROM users u INNER JOIN patients p ON u.id = p.patient_id";
 
         try (Connection con = DBConnection.getConnection();
              Statement st = con.createStatement();
@@ -100,5 +100,40 @@ public class PatientDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    // =========================
+    // ✅ LOGIN VALIDATION METHOD
+    // =========================
+    public Patient validateLogin(String username, String password) {
+        Patient patient = null;
+
+        String sql = "SELECT u.id, u.name, p.age, p.gender, p.blood_group " +
+                "FROM users u INNER JOIN patients p ON u.id = p.patient_id " +
+                "WHERE u.username = ? AND u.password = ?";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ps.setString(2, password);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                patient = new Patient(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("gender"),
+                        rs.getInt("age"),
+                        rs.getString("blood_group")
+                );
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return patient;
     }
 }

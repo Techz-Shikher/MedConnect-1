@@ -9,7 +9,7 @@ A Java-based desktop application built using **Swing**, **MySQL**, and **JDBC**.
 | Role          | Username        | Password     |
 |---------------|----------------|------------|
 | Admin         | admin          | admin123   |
-| Doctor        | drsmith        | doc123     |
+| Doctor        | drsmith        | doctor123  |
 | Patient       | patient1       | patient123 |
 
 > Each role has **specific access**:

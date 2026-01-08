@@ -18,7 +18,7 @@ A Java-based desktop application built using **Swing**, **MySQL**, and **JDBC**.
 > - **Patient:** View personal appointments, prescriptions, and bills  
 
 ---
-## Website Preview 
+## Website Demo Preview 
 https://techz-shikher.github.io/MedConnect-1/
 ---
 
